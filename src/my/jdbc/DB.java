@@ -1,5 +1,6 @@
 package my.jdbc;
 
+import java.io.FileInputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;
@@ -17,9 +18,9 @@ public class DB {
 	 */
 	private Connection con;
 	/**
-	 * Properties of database connection
+	 * Properties file of database connection
 	 */
-	private Properties prop;
+	private String propFile;
 	
 	/**
 	 * Constuctor. Initiates the database properties using properties instance prop.
@@ -27,8 +28,8 @@ public class DB {
 	 * For example: 	driver_type=mysql driver_path=C:\\path\\to\\Driver.jar database_address=127.0.0.1:3306 database_name=databaseName user=username	pass=password
 	 * </p>
 	 */
-	public DB(Properties prop) {
-		this.prop = prop;
+	public DB(String prop) {
+		this.propFile = prop;
 	}
 	
 	/**
@@ -37,6 +38,7 @@ public class DB {
 	 * @throws DBExceptions throws if there is an error.
 	 */
 	public boolean connect() throws DBExceptions {
+		Properties prop = getProperties(propFile);
 		con = DBConnection.getDBInstance(prop);
 		return con != null;
 	}
@@ -44,23 +46,33 @@ public class DB {
 	/**
 	 * Sees if connection is open
 	 * @return true if open false if closed
+	 * @throws DBExceptions if a database error occurs.
 	 */
-	public boolean isOpen() {
+	public boolean isOpen() throws DBExceptions {
 		try {
 			return !(con.isClosed());
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new DBExceptions("Database error.");
+		} catch (Exception e) {
+			throw new DBExceptions("Other error.");
 		}
-		return false;
 	}
 	/**
 	 * if connection is open, closes the connection
 	 * @return returns true;
+	 * @throws DBExceptions if there is a database error
 	 */
-	public boolean closeConnection() {
+	public boolean closeConnection() throws DBExceptions {
 		if (isOpen()) {
-			DBConnection.closeConnection();
+			try {
+				DBConnection.closeConnection();
+			} catch (DBExceptions e) {
+				// TODO Auto-generated catch block
+				throw new DBExceptions("Cannot close.");
+			} catch (Exception e) {
+				throw new DBExceptions("Other error.");
+			}
 		}
 		return true;
 	}
@@ -68,10 +80,11 @@ public class DB {
 	/**
 	 * Given the tablename and Hashmap of column_name to column_value, creates a query and attempt to insert to database.
 	 * @param tableName the name of the table to insert into.
-	 * @param hm the hashmap of the column_name -> value pair.
+	 * @param hm the hashmap of the column_name:value pair.
 	 * @return "Success" if success, "failure" if failed
+	 * @throws DBExceptions if query execution error occurs.
 	 */
-	public String saveData(String tableName,HashMap<String,String> hm) {
+	public String saveData(String tableName,HashMap<String,String> hm) throws DBExceptions {
 		String query = "INSERT INTO {{table}} ({{columns}}) VALUES ({{values}});";
 		query = query.replace("{{table}}", tableName);
 		StringBuilder columns = new StringBuilder("");
@@ -92,11 +105,28 @@ public class DB {
 	}
 	
 	/**
+	 * Loads properties from file "config.properties".
+	 * @return Properties specified by file.
+	 * @throws DBExceptions throws when file cannot be opened.
+	 */
+	public Properties getProperties(String filename) throws DBExceptions {
+		Properties prop = new Properties();
+		try {
+			prop.load(new FileInputStream(filename));
+		} catch (Exception e) {
+			System.out.println("no properties");
+			throw new DBExceptions("No properties found.");
+		}
+		return prop;
+	}
+	
+	/**
 	 * Given a query runs query on the database.
 	 * @param query the query
 	 * @return "Success" if successful, "failure" if failed.
+	 * @throws DBExceptions if query excecution error occurs.
 	 */
-	public String saveData(String query) {
+	public String saveData(String query) throws DBExceptions {
 		int num = DBUtilities.executeUpdate(con, query);
 		if (num == 0) {
 		return "failure";

@@ -15,8 +15,9 @@ public class DBUtilities {
 	 * @param con the database connection
 	 * @param query the query
 	 * @return 1 if success, 0 otherwise.
+	 * @throws DBExceptions 
 	 */
-	public static int executeUpdate(Connection con, String query) {
+	public static int executeUpdate(Connection con, String query) throws DBExceptions {
 		int rs;
 		try {
 			Statement stmt = con.createStatement();
@@ -24,10 +25,9 @@ public class DBUtilities {
 			return rs;
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new DBExceptions(e.getMessage());
 		} catch (Exception e) {
-			e.printStackTrace();
+			throw new DBExceptions(e.getMessage());
 		}
-		return 0;
 	}
 }

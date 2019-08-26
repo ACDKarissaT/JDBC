@@ -10,10 +10,8 @@ import java.util.Properties;
  *
  */
 public class DBApp {
-	public static void main(String[] args) {
-		Properties prop = getProperties(); //makes properties from property file
-		
-		DB db = new DB(prop);				//create db and connect
+	public static void main(String[] args) {		
+		DB db = new DB("app.properties");				//create db and connect
 		System.out.println("Connecting to database");
 		try {
 			System.out.println(db.connect());
@@ -29,28 +27,28 @@ public class DBApp {
 		hm.put("artist_type", "band");
 		
 		System.out.println("Inserting artist");
-		System.out.println(db.saveData("artists", hm)); //insert artist
+		try {
+			System.out.println(db.saveData("artists", hm));
+		} catch (DBExceptions e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} //insert artist
 		
 		System.out.println("Insert artist to albums. Should fail.");
-		System.out.println(db.saveData("albums", hm));
+		try {
+			System.out.println(db.saveData("albums", hm));
+		} catch (DBExceptions e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 		
 		System.out.println("Closing database connection.");
-		System.out.println(db.closeConnection()); //close db connection
-	}
-	
-	/**
-	 * Loads properties from file "config.properties".
-	 * @return Properties specified by file.
-	 */
-	public static Properties getProperties() {
-		Properties prop = new Properties();
 		try {
-			prop.load(new FileInputStream("config.properties"));
-		} catch (Exception e) {
-			System.out.println("no properties");
-			return null;
-		}
-		return prop;
+			System.out.println(db.closeConnection());
+		} catch (DBExceptions e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} //close db connection
 	}
 
 }

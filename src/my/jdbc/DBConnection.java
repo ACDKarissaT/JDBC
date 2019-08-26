@@ -68,54 +68,29 @@ public class DBConnection {
 	 * The connection to database.
 	 */
 	private static Connection connection;
-
-	/**
-	 * The driver class name.
-	 */
-	private String driver;//
-	/**
-	 * The database connection path
-	 */
-	private String url;//
-	/**
-	 * The path of the driver (absolute path recommended).
-	 */
-	private String jar;//
-	/**
-	 * username
-	 */
-	private String user;//
-	/**
-	 * password
-	 */
-	private String pass;//
-	/**
-	 * database type
-	 */
-	private String dType;
 	
 	/**
 	 * Constructor. Loads properties and connects to the database.
 	 * @param prop the connection properties.
-	 * @throws DBExceptions 
+	 * @throws DBExceptions throws when loading of properties or connecting fails
 	 */
 	private DBConnection(Properties prop) throws DBExceptions {
 		loadProperties(prop);
-		connect();
 		
 	}
 	
 	/**
 	 * Loads driver and connects to the database
 	 * @return true if connected, false if not.
+	 * @throws DBExceptions when driver can't be loaded from given path or if connection fails.
 	 */
-	private boolean connect() {
+	private boolean connect(String driver, String url, String jar, String user, String pass) throws DBExceptions {
 		URL u = null;
 		try {
 			u = new URL(jar);
 		} catch (MalformedURLException e1) {
 			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			throw new DBExceptions("Driver can't be loaded.");
 		}
 		String classname = driver;
 		URLClassLoader ucl = new URLClassLoader(new URL[] { u });
@@ -129,47 +104,49 @@ public class DBConnection {
 			return true;
 		} catch (ClassNotFoundException e) {
 			System.out.println("Where is your JDBC Driver?");
-			e.printStackTrace();
+			throw new DBExceptions("No driver found.");
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new DBExceptions("Sql exception.");
 		} catch (Exception e) {
-			e.printStackTrace();
+			throw new DBExceptions("Something went wrong.");
 		}
-		return false;
 	}
 	
 	/**
 	 * Loads the connection properties.
 	 * @param prop the connection properties
-	 * @throws DBExceptions 
+	 * @throws DBExceptions throws when loading of properties fail.
 	 */
 	private void loadProperties(Properties prop) throws DBExceptions {
-		this.dType = prop.getProperty("driver_type");
-		this.jar = DBConstants.jar.replace("{{driverPath}}", prop.getProperty("driver_path"));
-		this.pass = prop.getProperty("pass");
-		this.user = prop.getProperty("user");
+		String dType = prop.getProperty("driver_type");
+		String jar = DBConstants.jar.replace("{{driverPath}}", prop.getProperty("driver_path"));
+		String pass = prop.getProperty("pass");
+		String user = prop.getProperty("user");
+		String url = "";
+		String driver = "";
 		
 		if(dType.equals("mysql")) {
 			String dat = prop.getProperty("database_address") + "/" + prop.getProperty("database_name");
-			this.url = DBConstants.mySqlUrl.replace("{{database}}", dat);
-			this.driver = DBConstants.mySqlDriver;
+			url = DBConstants.mySqlUrl.replace("{{database}}", dat);
+			driver = DBConstants.mySqlDriver;
 		}else if(dType.equals("oracle")) {
 			String dat = prop.getProperty("database_address") + ":" + prop.getProperty("database_name");
-			this.url = DBConstants.oracleUrl.replace("{{database}}", dat);
-			this.driver = DBConstants.oracleDriver;
+			url = DBConstants.oracleUrl.replace("{{database}}", dat);
+			driver = DBConstants.oracleDriver;
 		}else if(dType.equals("postgresql")) {
 			String dat = prop.getProperty("database_address") + "/" + prop.getProperty("database_name");
-			this.url = DBConstants.postUrl.replace("{{database}}", dat);
-			this.driver = DBConstants.postDriver;
+			url = DBConstants.postUrl.replace("{{database}}", dat);
+			driver = DBConstants.postDriver;
 		}else if(dType.equals("mssql")) {
 			String dat = DBConstants.msUrl.replace("{{address}}", prop.getProperty("database_address"));
 			dat = dat.replace("{{database}}", prop.getProperty("database_name"));
-			this.url = dat;
-			this.driver = DBConstants.msDriver;
+			url = dat;
+			driver = DBConstants.msDriver;
 		} else {
 			throw new DBExceptions("Invalid Property format.");
 		}
+		connect(driver, url, jar, user, pass);
 	}
 	
 	/**
@@ -188,12 +165,13 @@ public class DBConnection {
 	
 	/**
 	 * closes database connection.
+	 * @throws DBExceptions throws when theres an error.
 	 */
-	public static void closeConnection() {
+	public static void closeConnection() throws DBExceptions {
 		try {
 			connection.close();
 		} catch(Exception e) {
-			e.printStackTrace();
+			throw new DBExceptions("Access error.");
 		}
 	}
 }
