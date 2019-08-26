@@ -68,10 +68,7 @@ public class DBConnection {
 	 * The connection to database.
 	 */
 	private static Connection connection;
-	/**
-	 * The database connection properties.
-	 */
-	private Properties prop = null;
+
 	/**
 	 * The driver class name.
 	 */

@@ -1,8 +1,5 @@
 package my.jdbc;
 
-import java.io.FileInputStream;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.HashMap;
