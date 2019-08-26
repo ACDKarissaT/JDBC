@@ -37,8 +37,9 @@ public class DB {
 	/**
 	 * Attempts to connect to database using properties.
 	 * @return true if connection is successful, false otherwise.
+	 * @throws DBExceptions throws if there is an error.
 	 */
-	public boolean connect() {
+	public boolean connect() throws DBExceptions {
 		con = DBConnection.getDBInstance(prop);
 		return con != null;
 	}
@@ -56,14 +57,15 @@ public class DB {
 		}
 		return false;
 	}
-	
 	/**
 	 * if connection is open, closes the connection
+	 * @return returns true;
 	 */
-	public void closeConnection() {
+	public boolean closeConnection() {
 		if (isOpen()) {
 			DBConnection.closeConnection();
 		}
+		return true;
 	}
 	
 	/**
@@ -79,7 +81,6 @@ public class DB {
 		StringBuilder values = new StringBuilder("");
 		Set<String> keys = hm.keySet();
 		for (String string : keys) {
-			System.out.println(string);
 			if(columns.length() == 0) {
 				columns.append("`"+string+"`");
 				values.append("\'"+ hm.get(string)+"\'");

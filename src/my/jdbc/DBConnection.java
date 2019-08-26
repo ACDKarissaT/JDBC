@@ -100,8 +100,9 @@ public class DBConnection {
 	/**
 	 * Constructor. Loads properties and connects to the database.
 	 * @param prop the connection properties.
+	 * @throws DBExceptions 
 	 */
-	private DBConnection(Properties prop) {
+	private DBConnection(Properties prop) throws DBExceptions {
 		loadProperties(prop);
 		connect();
 		
@@ -128,7 +129,6 @@ public class DBConnection {
 			DriverManager.registerDriver(new DriverShim(d));
 			connection = DriverManager
 					.getConnection(url, user, pass);
-			System.out.println("connected");
 			return true;
 		} catch (ClassNotFoundException e) {
 			System.out.println("Where is your JDBC Driver?");
@@ -145,8 +145,9 @@ public class DBConnection {
 	/**
 	 * Loads the connection properties.
 	 * @param prop the connection properties
+	 * @throws DBExceptions 
 	 */
-	private void loadProperties(Properties prop) {
+	private void loadProperties(Properties prop) throws DBExceptions {
 		this.dType = prop.getProperty("driver_type");
 		this.jar = DBConstants.jar.replace("{{driverPath}}", prop.getProperty("driver_path"));
 		this.pass = prop.getProperty("pass");
@@ -155,7 +156,6 @@ public class DBConnection {
 		if(dType.equals("mysql")) {
 			String dat = prop.getProperty("database_address") + "/" + prop.getProperty("database_name");
 			this.url = DBConstants.mySqlUrl.replace("{{database}}", dat);
-			System.out.println(this.url);
 			this.driver = DBConstants.mySqlDriver;
 		}else if(dType.equals("oracle")) {
 			String dat = prop.getProperty("database_address") + ":" + prop.getProperty("database_name");
@@ -171,7 +171,7 @@ public class DBConnection {
 			this.url = dat;
 			this.driver = DBConstants.msDriver;
 		} else {
-			//throw an error
+			throw new DBExceptions("Invalid Property format.");
 		}
 	}
 	
@@ -179,8 +179,9 @@ public class DBConnection {
 	 * Creates connection if not already instantiated and gives the connection instance.
 	 * @param prop connection properties.
 	 * @return connection instance.
+	 * @throws DBExceptions throws if there is an error
 	 */
-	public static Connection getDBInstance(Properties prop) {
+	public static Connection getDBInstance(Properties prop) throws DBExceptions {
 		if (con == null) {
 			con = new DBConnection(prop);
 		}
